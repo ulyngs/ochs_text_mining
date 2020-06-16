@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+1_sanskr
+data_raw/MBH1-18U.HTM
+data_raw/sa_rAmAyaNa.txt
+data_processed/*.csv
