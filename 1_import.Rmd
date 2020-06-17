@@ -17,7 +17,7 @@ This is an example of how to do text mining with the Mahabharata and the Ramayan
 ## Read in texts line by line
 First we read in the texts line by line and put them in a 'tibble', which is a bit like putting them in a spreadsheet where each row is a line of text.
 
-```{r cars}
+```{r}
 mahabharata_raw <- read_lines("data_raw/MBH1-18U.HTM") %>% 
   as_tibble() %>% 
   rename(text = value)
