@@ -1,0 +1,125 @@
+---
+title: "Data analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytext)
+```
+
+This is an example of how to do text mining with the Mahabharata and the Ramayana, in versions downloaded from GRETIL.
+
+# Read in text
+```{r}
+texts_to_read <- list.files("data_processed", full.names = TRUE) %>% 
+  set_names()
+
+texts <- texts_to_read %>% 
+  map_df(read_csv, .id = "document")
+
+texts <- texts %>% 
+  mutate(document = case_when(
+    str_detect(document, "mahabharatha") ~ "Mahabharatha",
+    str_detect(document, "ramayana") ~ "Ramayana",
+    str_detect(document, "rgveda") ~ "Rgveda"
+  ))
+
+```
+
+Great, let's have a look at how many lines we have from each
+
+```{r}
+texts %>% 
+  count(document)
+```
+
+# Term frequencies & tf-idf
+## Term frequency
+```{r}
+text_word_counts <- texts %>%
+  unnest_tokens(word, text_clean) %>% 
+  count(document, word, sort = TRUE)
+
+total_words <- text_word_counts %>% 
+  group_by(document) %>% 
+  summarise(total = sum(n))
+
+text_words <- text_words %>% 
+  left_join(total_words) %>% 
+  mutate(term_frequency = n / total)
+
+```
+
+Let's try and visualise this
+
+```{r}
+text_words %>% 
+  group_by(document) %>% 
+  arrange(desc(term_frequency)) %>% 
+  slice(1:20) %>% 
+  ggplot() +
+    geom_col(aes(x = reorder(word, term_frequency), y = term_frequency)) + 
+    coord_flip() +
+    facet_wrap(~document) +
+    labs(x = "", y = "Term frequency")
+  
+```
+
+# Tf-idf
+```{r}
+word_tf_idf <- text_word_counts %>% 
+  bind_tf_idf(word, document, n)
+
+word_tf_idf %>% 
+  group_by(document) %>% 
+  arrange(desc(tf_idf)) %>% 
+  slice(1:20) %>% 
+  ggplot() +
+    geom_col(aes(x = reorder(word, tf_idf), y = tf_idf, fill = document)) +
+    facet_wrap(~document, scales = "free") +
+    coord_flip()
+    
+ggsave("words_tf_idf.png", height = 6, width = 10)
+```
+
+
+# n-grams
+## Split text up into bigrams
+```{r}
+text_bigrams <- texts %>% 
+  unnest_tokens(bigrams, text_clean, token = "ngrams", n = 2)
+
+bigram_counts <- text_bigrams %>% 
+  count(bigrams, document, sort = TRUE)
+```
+
+
+## Add tf-idf
+```{r}
+bigram_tf_idf <- bigram_counts %>% 
+  bind_tf_idf(bigrams, document, n)
+
+bigram_tf_idf %>% 
+  group_by(document) %>% 
+  arrange(desc(tf_idf)) %>% 
+  slice(1:20) %>% 
+  ggplot() +
+    geom_col(aes(x = reorder(bigrams, tf_idf), y = tf_idf, fill = document)) + 
+    coord_flip() +
+    facet_wrap(~document, scales = "free") +
+    labs( x = "", title = "tf-idf on bigrams")
+
+
+```
+
+
+
+# topic modelling
+See [Julia Silge's (co-author of 'Text Mining With R') wonderful demo on YouTube](https://www.youtube.com/watch?v=evTuL-RcRpc).
+
+See also [this chapter of 'Text Mining With R'](https://www.tidytextmining.com/topicmodeling.html).
+
+# Joining text with additional info
+See [the sentiment analysis chapter of 'Text Mining With R'](https://www.tidytextmining.com/sentiment.html).
