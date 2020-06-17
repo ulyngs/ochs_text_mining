@@ -6,8 +6,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(rvest)
-library(tidytext)
 library(lubridate)
 ```
 
@@ -25,6 +23,10 @@ mahabharata_raw <- read_lines("data_raw/MBH1-18U.HTM") %>%
 ramayana_raw <- read_lines("data_raw/sa_rAmAyaNa.txt") %>% 
   as_tibble() %>% 
   rename(text = value)
+
+rgveda_raw <- read_lines("data_raw/sa_Rgveda-edAufrecht.txt") %>% 
+  as_tibble() %>% 
+  rename(text = value)
 ```
 
 # Clean text
@@ -39,6 +41,9 @@ mahabharatha_text <- mahabharata_raw %>%
   slice(82:( n() - 4 )) #keep only from rows 81 until 4 rows before the end
 
 ramayana_text <- ramayana_raw %>% 
+  slice(34:n())
+
+rgveda_text <- rgveda_raw %>% 
   slice(34:n())
 ```
 
@@ -72,18 +77,40 @@ ramayana_cleaned <- ramayana_text %>%
   )) %>% 
   mutate(text_clean = str_replace(text, r"(R_\d,\d+\.\d+)", "")) %>% 
   select(-text)
-
 ```
 
+The rgveda text is separated into 10 'maṇḍala's, but is otherwise similar to the ramayana text: some of the lines have verse and line indicators. The mandalas I think is implicit in the verse and line indicators, so let's just grab those and put them in a separate column.
 
+If a line doesn't have a verse and line indicator, we'll give it the one from the following line - or the one after that, if that one's empty too.
+
+```{r}
+rgveda_cleaned <- rgveda_text %>% 
+  filter(text != "") %>%   #drop empty rows
+  #slice(1:10) %>% 
+  mutate(verse_line = str_extract(text, r"(RV_\d+,\d+\.\d+)")) %>% 
+  mutate(verse_line = case_when(
+    !is.na(verse_line) ~ verse_line,
+    is.na(verse_line) & !is.na(lead(verse_line)) ~ lead(verse_line),
+    is.na(verse_line) & is.na(lead(verse_line)) & !is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 2),
+    is.na(verse_line) & is.na(lead(verse_line)) & is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 3)
+  )) %>% 
+  mutate(text_clean = str_replace(text, r"(RV_\d+,\d+\.\d+)", ""),
+         text_clean = str_replace_all(text_clean, r"(\|)", "")) %>% 
+  select(-text)
+```
 
 # Save out cleaned text
 ```{r}
+processed_path <- "data_processed/"
+
 mahabharatha_cleaned %>% 
-  write_csv(str_c("data_processed/", today(), "_mahabharatha_cleaned.csv"))
+  write_csv(str_c(processed_path, today(), "_mahabharatha_cleaned.csv"))
 
 ramayana_cleaned %>% 
-  write_csv(str_c("data_processed/", today(), "_ramayana_cleaned.csv"))
+  write_csv(str_c(processed_path, today(), "_ramayana_cleaned.csv"))
+
+rgveda_cleaned %>% 
+  write_csv(str_c(processed_path, today(), "_rgveda_cleaned.csv"))
 
 ```
 
