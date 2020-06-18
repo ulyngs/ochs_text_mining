@@ -97,19 +97,14 @@ rgveda_cleaned <- rgveda_text %>%
          text_clean = str_replace_all(text_clean, r"(\|)", ""))
 ```
 
-# Save out cleaned text
+# Combine cleaned texts and save out
 ```{r}
-processed_path <- "data_processed/"
+texts <- mahabharatha_cleaned %>% 
+  mutate(document = "Mahabharatha") %>% 
+  bind_rows(ramayana_cleaned %>% mutate(document = "Ramayana")) %>% 
+  bind_rows(rgveda_cleaned %>% mutate(document = "Rgveda"))
 
-mahabharatha_cleaned %>% 
-  write_csv(str_c(processed_path, today(), "_mahabharatha_cleaned.csv"))
-
-ramayana_cleaned %>% 
-  write_csv(str_c(processed_path, today(), "_ramayana_cleaned.csv"))
-
-rgveda_cleaned %>% 
-  write_csv(str_c(processed_path, today(), "_rgveda_cleaned.csv"))
+texts %>% 
+  write_csv("data_processed/texts_combined_line_by_line.csv")
 
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
