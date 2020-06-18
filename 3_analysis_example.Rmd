@@ -26,6 +26,9 @@ texts <- texts %>%
     str_detect(document, "rgveda") ~ "Rgveda"
   ))
 
+# save it out
+texts %>% 
+  write_csv("data_processed/texts_line_by_line.csv")
 ```
 
 Great, let's have a look at how many lines we have from each
@@ -37,32 +40,50 @@ texts %>%
 
 # Term frequencies & tf-idf
 ## Term frequency
+Here's an example of doing this manually.
+We first split the text up into single words, using the 'unnest_tokens' function.
+
 ```{r}
-text_word_counts <- texts %>%
-  unnest_tokens(word, text_clean) %>% 
+text_tokenise_by_word <- texts %>% 
+  select(-text) %>% 
+  unnest_tokens(word, text_clean)
+
+# save it out so we can read in the result quickly in the dashboard example
+text_tokenise_by_word %>% 
+  write_csv("data_processed/texts_tokenised_by_words.csv")
+```
+
+Then we count how many times each word occurs; count the total number of words in each text; then calculate the term frequencies
+
+```{r}
+text_word_counts <- text_tokenise_by_word %>%
   count(document, word, sort = TRUE)
 
 total_words <- text_word_counts %>% 
   group_by(document) %>% 
   summarise(total = sum(n))
 
-text_words <- text_words %>% 
+text_term_frequencies <- text_word_counts %>% 
   left_join(total_words) %>% 
   mutate(term_frequency = n / total)
 
+# write out so we can read in quickly in dashboard example
+text_term_frequencies %>% 
+  write_csv("data_processed/text_term_frequencies.csv")
+
 ```
 
-Let's try and visualise this
+Let's visualise this in a bar chart
 
 ```{r}
-text_words %>% 
+text_term_frequencies %>% 
   group_by(document) %>% 
   arrange(desc(term_frequency)) %>% 
   slice(1:20) %>% 
   ggplot() +
-    geom_col(aes(x = reorder(word, term_frequency), y = term_frequency)) + 
+    geom_col(aes(x = reorder(word, term_frequency), y = term_frequency, fill = document)) + 
     coord_flip() +
-    facet_wrap(~document) +
+    facet_wrap(~document, scales = "free") +
     labs(x = "", y = "Term frequency")
   
 ```
