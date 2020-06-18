@@ -13,22 +13,7 @@ This is an example of how to do text mining with the Mahabharata and the Ramayan
 
 # Read in text
 ```{r}
-texts_to_read <- list.files("data_processed", full.names = TRUE) %>% 
-  set_names()
-
-texts <- texts_to_read %>% 
-  map_df(read_csv, .id = "document")
-
-texts <- texts %>% 
-  mutate(document = case_when(
-    str_detect(document, "mahabharatha") ~ "Mahabharatha",
-    str_detect(document, "ramayana") ~ "Ramayana",
-    str_detect(document, "rgveda") ~ "Rgveda"
-  ))
-
-# save it out
-texts %>% 
-  write_csv("data_processed/texts_line_by_line.csv")
+texts <- read_csv("data_processed/texts_combined_line_by_line.csv")
 ```
 
 Great, let's have a look at how many lines we have from each
