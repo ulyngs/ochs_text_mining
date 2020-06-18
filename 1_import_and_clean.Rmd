@@ -57,7 +57,6 @@ mahabharatha_cleaned <- mahabharatha_text %>%
   mutate(text_clean = str_replace(text, "[^\t]+", ""),
          text_clean = str_replace(text_clean, "(\t)", ""),
          text_clean = str_replace(text_clean, "<BR>", "")) %>% 
-  select(-text) %>% 
   filter(text_clean != "")
 
 ```
@@ -76,8 +75,7 @@ ramayana_cleaned <- ramayana_text %>%
     is.na(verse_line) & is.na(lead(verse_line)) & !is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 2),
     is.na(verse_line) & is.na(lead(verse_line)) & is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 3)
   )) %>% 
-  mutate(text_clean = str_replace(text, r"(R_\d,\d+\.\d+)", "")) %>% 
-  select(-text)
+  mutate(text_clean = str_replace(text, r"(R_\d,\d+\.\d+)", ""))
 ```
 
 The rgveda text is separated into 10 'maṇḍala's, but is otherwise similar to the ramayana text: some of the lines have verse and line indicators. The mandalas I think is implicit in the verse and line indicators, so let's just grab those and put them in a separate column.
@@ -96,8 +94,7 @@ rgveda_cleaned <- rgveda_text %>%
     is.na(verse_line) & is.na(lead(verse_line)) & is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 3)
   )) %>% 
   mutate(text_clean = str_replace(text, r"(RV_\d+,\d+\.\d+)", ""),
-         text_clean = str_replace_all(text_clean, r"(\|)", "")) %>% 
-  select(-text)
+         text_clean = str_replace_all(text_clean, r"(\|)", ""))
 ```
 
 # Save out cleaned text
