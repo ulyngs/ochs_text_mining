@@ -1,0 +1,16 @@
+---
+title: "Data analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytext)
+```
+
+# Read in text
+
+# Term frequencies & tf-idf
+
+# n-grams
