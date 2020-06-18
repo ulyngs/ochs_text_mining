@@ -1,0 +1,249 @@
+---
+title: "Muktabodha"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(vroom)
+library(tidyverse)
+library(DT)
+library(scales)
+library(plotly)
+
+by_line <- vroom("data_processed/texts_line_by_line.csv")
+tokenised_by_word <- vroom("data_processed/texts_tokenised_by_words.csv")
+term_frequencies <- vroom("data_processed/text_term_frequencies.csv")
+text_titles <- term_frequencies %>% distinct(document)
+options(shiny.maxRequestSize=30*1024^2)
+
+```
+
+How to Use
+===================================== 
+
+### Welcome to the Muktabodha Dashboard!
+
+This is an example of using a flexdashboard to interact with the muktabodha data
+
+
+For feedback, please contact [ulrik.lyngs\@cs.ox.ac.uk](mailto:ulrik.lyngs@cs.ox.ac.uk).
+
+Enjoy!
+
+<br>
+Ulrik Lyngs,\
+Human Centered Computing \
+Department of Computer Science \
+University of Oxford
+
+
+Overview
+===================================== 
+
+Row
+-------------------------------------
+### Histogram of text lengths
+```{r}
+term_frequencies %>% 
+  select(document, total) %>% 
+  distinct() %>% 
+  ggplot() +
+    geom_col(aes(x = document, y = total, fill = document)) +
+    labs(title = "Number of words in texts", x = "", y = "") +
+    theme_minimal() +
+    guides(fill = FALSE)
+
+```
+
+
+### Texts
+```{r}
+term_frequencies %>% 
+  select(document, total) %>% 
+  distinct() %>% 
+  rename("Number of words" = total) %>% 
+  knitr::kable()
+```
+
+
+Inspect texts
+===================================== 
+Inputs {.sidebar data-width=250}
+-------------------------------------
+
+```{r}
+selectInput("select_text", 
+            label = "Select text", 
+            choices = text_titles$document)
+
+renderText({
+  req(input$select_text)
+  
+  viewed_text <- text_titles %>% 
+    filter(document == input$select_text)
+  
+  print(str_c(
+    "The currently viewed text is:\n",
+    viewed_text$document))
+})
+
+```
+
+Row
+-------------------------------------
+### Text - raw and cleaned
+```{r}
+renderDataTable({
+    req(input$select_text)
+  
+    data <- by_line %>% 
+      filter(document == input$select_text) %>% 
+      select("Raw text" = text,
+             "Cleaned text" = text_clean, 
+             `Verse and line` = verse_line)
+      
+    DT::datatable(data, 
+              options = list(
+                scrollX="400px",
+                scrollY="550px",
+                pageLength = 100
+    ))
+  })
+
+```
+
+
+### Term frequencies {data-width=300}
+```{r}
+renderDataTable({
+    req(input$select_text)
+
+    data <- term_frequencies %>%
+      filter(document == input$select_text) %>% 
+      select(word, term_frequency) %>% 
+      mutate(term_frequency = round(term_frequency, 5))
+
+    DT::datatable(data,
+              options = list(
+                scrollX="400px",
+                scrollY="550px",
+                pageLength = 100
+    ))
+  })
+
+```
+
+Count occurrences of words
+===================================== 
+Inputs {.sidebar data-width=250}
+-------------------------------------
+
+This uses ['regular expressions'](https://r4ds.had.co.nz/strings.html#matching-patterns-with-regular-expressions).
+
+A few highlights:
+
+- `[abc]` will match a, b, or c.
+- `[^abc]` matches anything *except* a, b, or c.
+
+So if you want to identify various misspellings of 'sakta', you could use `[sś][aā]kta`.
+
+
+```{r}
+textInput("count_word_query", "What word do you want to count?", placeholder = "For example [sś][aā]kta")
+
+```
+
+Row
+-------------------------------------
+### Count words
+```{r}
+count_words_data <- reactive({
+  req(input$count_word_query)
+  
+  data <- tokenised_by_word %>%
+      filter(str_detect(word, input$count_word_query)) %>%
+      group_by(document) %>%
+      summarise(num_occurrences = n()) %>%
+      arrange(desc(num_occurrences))
+})
+
+
+renderTable({
+    req(input$count_word_query)
+    
+    count_words_data() %>% 
+      select("Document" = document, 
+             "Number of occurrences" = num_occurrences)
+  })
+
+```
+
+Row
+-------------------------------------
+### Interactive bar chart (each bar is a text)
+```{r}
+renderPlotly({
+  req(input$count_word_query)
+  
+  gg_test <- count_words_data() %>% 
+  
+  ggplot() +
+    geom_col(aes(x = reorder(document, -num_occurrences),
+                 y = num_occurrences,
+                 text = document)) +
+    labs(y = "Number of occurrences", x = "Text (hover to see info)")
+
+  ggplotly(gg_test, tooltip = c("num_occurrences"))  
+})
+
+```
+
+
+
+Search in text by line
+===================================== 
+Inputs {.sidebar data-width=250}
+-------------------------------------
+
+This again uses ['regular expressions'](https://r4ds.had.co.nz/strings.html#matching-patterns-with-regular-expressions).
+
+A few highlights:
+
+- `[abc]` will match a, b, or c.
+- `[^abc]` matches anything *except* a, b, or c.
+
+So if you want to identify lines with various misspellings of 'sakta', you could use `[sś][aā]kta`.
+
+
+```{r}
+textInput("search_text_query", "What word do you want to search for?", placeholder = "For example [sś][aā]kta")
+```
+
+
+Row
+-------------------------------------
+### Search texts
+```{r}
+renderDataTable({
+    req(input$search_text_query)
+    
+    data <- by_line %>% 
+      filter(str_detect(text_clean, input$search_text_query)) %>%
+      filter(document == input$select_text) %>% 
+      select(line = text_clean, 
+             `Document` = document, 
+             `Verse and line` = verse_line)
+    
+    DT::datatable(data, 
+              options = list(
+                scrollX="400px",
+                scrollY="500px"
+    ))
+  })
+
+```
+
