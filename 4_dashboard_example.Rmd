@@ -14,7 +14,7 @@ library(DT)
 library(scales)
 library(plotly)
 
-by_line <- vroom("data_processed/texts_line_by_line.csv")
+by_line <- vroom("data_processed/texts_combined_line_by_line.csv")
 tokenised_by_word <- vroom("data_processed/texts_tokenised_by_words.csv")
 term_frequencies <- vroom("data_processed/text_term_frequencies.csv")
 text_titles <- term_frequencies %>% distinct(document)
