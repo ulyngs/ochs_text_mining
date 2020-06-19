@@ -1,5 +1,5 @@
 ---
-title: "Muktabodha"
+title: "Dashboard example"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
