@@ -13,7 +13,8 @@ This is an example of how to do text mining with the Mahabharata and the Ramayan
 
 # Read in text
 ```{r}
-texts <- read_csv("data_processed/texts_combined_line_by_line.csv")
+texts <- read_csv("data_processed/texts_combined_line_by_line.csv") %>% 
+  select(-text)
 ```
 
 Great, let's have a look at how many lines we have from each
@@ -30,7 +31,6 @@ We first split the text up into single words, using the 'unnest_tokens' function
 
 ```{r}
 text_tokenise_by_word <- texts %>% 
-  select(-text) %>% 
   unnest_tokens(word, text_clean)
 
 # save it out so we can read in the result quickly in the dashboard example
@@ -65,11 +65,13 @@ text_term_frequencies %>%
   group_by(document) %>% 
   arrange(desc(term_frequency)) %>% 
   slice(1:20) %>% 
+  mutate(word = reorder_within(word, term_frequency, document)) %>% 
   ggplot() +
     geom_col(aes(x = reorder(word, term_frequency), y = term_frequency, fill = document)) + 
     coord_flip() +
     facet_wrap(~document, scales = "free") +
-    labs(x = "", y = "Term frequency")
+    labs(x = "", y = "Term frequency") +
+    scale_x_reordered()
   
 ```
 
@@ -82,10 +84,12 @@ word_tf_idf %>%
   group_by(document) %>% 
   arrange(desc(tf_idf)) %>% 
   slice(1:20) %>% 
+  mutate(word = reorder_within(word, tf_idf, document)) %>% 
   ggplot() +
     geom_col(aes(x = reorder(word, tf_idf), y = tf_idf, fill = document)) +
     facet_wrap(~document, scales = "free") +
-    coord_flip()
+    coord_flip() +
+    scale_x_reordered()
     
 ggsave("words_tf_idf.png", height = 6, width = 10)
 ```
@@ -111,11 +115,13 @@ bigram_tf_idf %>%
   group_by(document) %>% 
   arrange(desc(tf_idf)) %>% 
   slice(1:20) %>% 
+  mutate(bigrams = reorder_within(bigrams, tf_idf, document)) %>% 
   ggplot() +
     geom_col(aes(x = reorder(bigrams, tf_idf), y = tf_idf, fill = document)) + 
     coord_flip() +
     facet_wrap(~document, scales = "free") +
-    labs( x = "", title = "tf-idf on bigrams")
+    labs( x = "", title = "tf-idf on bigrams") +
+    scale_x_reordered()
 
 
 ```
