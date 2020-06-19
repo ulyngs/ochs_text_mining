@@ -34,9 +34,6 @@ rgveda_raw <- read_lines("data_raw/sa_Rgveda-edAufrecht.txt") %>%
 Now, extract just the text from each.
 
 ```{r}
-# have a look at the end
-mahabharata_raw %>% tail()
-
 mahabharatha_text <- mahabharata_raw %>% 
   slice(82:( n() - 4 )) #keep only from rows 81 until 4 rows before the end
 
@@ -53,7 +50,7 @@ Let's parse that out, then replace those indicators, the tabs, and the break tag
 
 ```{r}
 mahabharatha_cleaned <- mahabharatha_text %>% 
-  mutate(verse_line = str_extract(text, "[^(\t)|<]+")) %>% 
+  mutate(verse_line = str_extract(text, "[^\t]+")) %>% 
   mutate(text_clean = str_replace(text, "[^\t]+", ""),
          text_clean = str_replace(text_clean, "(\t)", ""),
          text_clean = str_replace(text_clean, "<BR>", "")) %>% 
