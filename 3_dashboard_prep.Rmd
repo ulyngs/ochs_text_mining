@@ -1,0 +1,46 @@
+---
+title: "Data analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytext)
+```
+
+# Read in text
+```{r}
+texts <- read_csv("data_processed/texts_combined_line_by_line.csv") %>% 
+  select(-text)
+```
+
+# Save out tokenisation by word
+```{r}
+text_tokenise_by_word <- texts %>% 
+  unnest_tokens(word, text_clean)
+
+# save it out so we can read in the result quickly in the dashboard example
+text_tokenise_by_word %>% 
+  write_csv("data_processed/texts_tokenised_by_words.csv")
+```
+
+# Save out term frequencies
+```{r}
+text_word_counts <- text_tokenise_by_word %>%
+  count(document, word, sort = TRUE)
+
+total_words <- text_word_counts %>% 
+  group_by(document) %>% 
+  summarise(total = sum(n))
+
+text_term_frequencies <- text_word_counts %>% 
+  left_join(total_words) %>% 
+  mutate(term_frequency = n / total)
+
+# write out so we can read in quickly in dashboard example
+text_term_frequencies %>% 
+  write_csv("data_processed/text_term_frequencies.csv")
+
+```
+

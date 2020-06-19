@@ -32,10 +32,6 @@ We first split the text up into single words, using the 'unnest_tokens' function
 ```{r}
 text_tokenise_by_word <- texts %>% 
   unnest_tokens(word, text_clean)
-
-# save it out so we can read in the result quickly in the dashboard example
-text_tokenise_by_word %>% 
-  write_csv("data_processed/texts_tokenised_by_words.csv")
 ```
 
 Then we count how many times each word occurs; count the total number of words in each text; then calculate the term frequencies
@@ -51,10 +47,6 @@ total_words <- text_word_counts %>%
 text_term_frequencies <- text_word_counts %>% 
   left_join(total_words) %>% 
   mutate(term_frequency = n / total)
-
-# write out so we can read in quickly in dashboard example
-text_term_frequencies %>% 
-  write_csv("data_processed/text_term_frequencies.csv")
 
 ```
 
