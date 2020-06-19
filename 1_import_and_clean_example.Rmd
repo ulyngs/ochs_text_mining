@@ -7,6 +7,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
+
+# create the folders if they don't exist
+dir.create("data_processed")
+dir.create("data_raw")
 ```
 
 This is an example of how to do text mining with the Mahabharata and the Ramayana, in versions downloaded from GRETIL.
