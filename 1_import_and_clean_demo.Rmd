@@ -10,11 +10,12 @@ library(lubridate)
 ```
 
 # Import text
-## Read in texts line by line
 
 # Clean text
 ## Extract text lines
 
 ## Extract out verse information
 
-# Combine cleaned texts and save out
+## Clean text
+
+# Save out processed text
