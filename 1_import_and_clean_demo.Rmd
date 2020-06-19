@@ -1,0 +1,20 @@
+---
+title: "Data import"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+# Import text
+## Read in texts line by line
+
+# Clean text
+## Extract text lines
+
+## Extract out verse information
+
+# Combine cleaned texts and save out
