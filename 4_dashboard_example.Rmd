@@ -233,7 +233,6 @@ renderDataTable({
     
     data <- by_line %>% 
       filter(str_detect(text_clean, input$search_text_query)) %>%
-      filter(document == input$select_text) %>% 
       select(line = text_clean, 
              `Document` = document, 
              `Verse and line` = verse_line)
