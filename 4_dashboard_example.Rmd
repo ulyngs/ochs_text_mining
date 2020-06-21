@@ -25,9 +25,9 @@ options(shiny.maxRequestSize=30*1024^2)
 How to Use
 ===================================== 
 
-### Welcome to the Muktabodha Dashboard!
+### Welcome to the Dashboard!
 
-This is an example of using a flexdashboard to interact with the muktabodha data
+This is an example of using a flexdashboard to interact with texts downloaded from GRETIL!
 
 
 For feedback, please contact [ulrik.lyngs\@cs.ox.ac.uk](mailto:ulrik.lyngs@cs.ox.ac.uk).
