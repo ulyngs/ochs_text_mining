@@ -49,10 +49,10 @@ Row
 ### Histogram of text lengths
 ```{r}
 term_frequencies %>% 
-  select(document, total) %>% 
-  distinct() %>% 
+  group_by(document) %>% 
+  summarise(total_words = sum(n)) %>% 
   ggplot() +
-    geom_col(aes(x = document, y = total, fill = document)) +
+    geom_col(aes(x = document, y = total_words, fill = document)) +
     labs(title = "Number of words in texts", x = "", y = "") +
     theme_minimal() +
     guides(fill = FALSE)
@@ -63,9 +63,9 @@ term_frequencies %>%
 ### Texts
 ```{r}
 term_frequencies %>% 
-  select(document, total) %>% 
-  distinct() %>% 
-  rename("Number of words" = total) %>% 
+  group_by(document) %>% 
+  summarise(total_words = sum(n)) %>% 
+  rename("Number of words" = total_words) %>% 
   knitr::kable()
 ```
 
@@ -124,8 +124,9 @@ renderDataTable({
 
     data <- term_frequencies %>%
       filter(document == input$select_text) %>% 
-      select(word, term_frequency) %>% 
-      mutate(term_frequency = round(term_frequency, 5))
+      select(word, tf) %>% 
+      mutate(tf = round(tf, 5)) %>% 
+      rename(term_frequency = tf)
 
     DT::datatable(data,
               options = list(

@@ -7,6 +7,37 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(tidytext)
+
+# create the folders if they don't exist
+dir.create("data_processed")
+dir.create("data_raw")
+
+# download the files if they don't exist
+gretil_files <- tribble(
+  ~file,                       ~download_path,       ~save_name,
+  "sa_Rgveda-edAufrecht.txt",  "http://gretil.sub.uni-goettingen.de/gretil/corpustei/transformations/plaintext/sa_Rgveda-edAufrecht.txt", "sa_Rgveda-edAufrecht.txt",
+  "sa_rAmAyaNa.txt",           "http://gretil.sub.uni-goettingen.de/gretil/corpustei/transformations/plaintext/sa_rAmAyaNa.txt", "sa_rAmAyaNa.txt",
+  "MBH1-18U.HTM",              "http://gretil.sub.uni-goettingen.de/gretil/1_sanskr/2_epic/mbh/mbh1-18u.zip", "mbh1-18u.zip",
+)
+
+check_and_download <- function(file, download_path, save_name) {
+  if(!file.exists(str_c("data_raw/", file))){
+    download.file(download_path, paste0("data_raw/", save_name))
+  }
+}
+
+gretil_files %>% 
+  pwalk(check_and_download)
+
+# finally, unzip mahabharatha and delete
+unzip("data_raw/mbh1-18u.zip", "MBH1-18U.HTM", exdir = "data_raw")
+unlink("data_raw/mbh1-18u.zip")
+
+# if the cleaned and combined file doesn't exist, then run import and clean script
+if(!file.exists("data_processed/texts_combined_line_by_line.csv")) {
+  source("scripts/1_import_and_clean_example.R") 
+}
+
 ```
 
 # Read in text
@@ -30,16 +61,8 @@ text_tokenise_by_word %>%
 text_word_counts <- text_tokenise_by_word %>%
   count(document, word, sort = TRUE)
 
-total_words <- text_word_counts %>% 
-  group_by(document) %>% 
-  summarise(total = sum(n))
-
-text_term_frequencies <- text_word_counts %>% 
-  left_join(total_words) %>% 
-  mutate(term_frequency = n / total)
-
-# write out so we can read in quickly in dashboard example
-text_term_frequencies %>% 
+text_word_counts %>% 
+  bind_tf_idf(term = word, document = document, n = n) %>% 
   write_csv("data_processed/text_term_frequencies.csv")
 
 ```

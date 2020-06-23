@@ -1,9 +1,4 @@
----
-title: "Data import"
-output: html_document
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE--------------------------------------------------------------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
@@ -11,15 +6,9 @@ library(lubridate)
 # create the folders if they don't exist
 dir.create("data_processed")
 dir.create("data_raw")
-```
 
-This is an example of how to do text mining with the Mahabharata and the Ramayana, in versions downloaded from GRETIL.
 
-# Import text
-## Read in texts line by line
-First we read in the texts line by line and put them in a 'tibble', which is a bit like putting them in a spreadsheet where each row is a line of text.
-
-```{r}
+## --------------------------------------------------------------------------------------------------------------------------------
 mahabharata_raw <- read_lines("data_raw/MBH1-18U.HTM") %>% 
   as_tibble() %>% 
   rename(text = value)
@@ -32,13 +21,9 @@ ramayana_raw <- read_lines("data_raw/sa_rAmAyaNa.txt") %>%
 rgveda_raw <- read_lines("data_raw/sa_Rgveda-edAufrecht.txt") %>% 
   as_tibble() %>% 
   rename(text = value)
-```
 
-# Clean text
-## Extract text lines
-Now, extract just the text from each.
 
-```{r}
+## --------------------------------------------------------------------------------------------------------------------------------
 mahabharatha_text <- mahabharata_raw %>% 
   slice(82:( n() - 4 )) #keep only from rows 81 until 4 rows before the end
 
@@ -47,13 +32,9 @@ ramayana_text <- ramayana_raw %>%
 
 rgveda_text <- rgveda_raw %>% 
   slice(34:n())
-```
 
-## Extract out verse information
-Each line of the mahabharatha text begins with a verse and line indicator followed by a tab ("\t").
-Let's parse that out, then replace those indicators, the tabs, and the break tags ("<BR>") with nothing.
 
-```{r}
+## --------------------------------------------------------------------------------------------------------------------------------
 mahabharatha_cleaned <- mahabharatha_text %>% 
   mutate(verse_line = str_extract(text, "[^\t]+")) %>% 
   mutate(text_clean = str_replace(text, "[^\t]+", ""),
@@ -61,13 +42,9 @@ mahabharatha_cleaned <- mahabharatha_text %>%
          text_clean = str_replace(text_clean, "<BR>", "")) %>% 
   filter(text_clean != "")
 
-```
 
-In the ramayana text, some of the lines have verse and line indicators. 
-Let's put those in a separate column.
-If a line doesn't have a verse and line indicator, we'll give it the one from the following line - or the one after that, if that one's empty too.
 
-```{r}
+## --------------------------------------------------------------------------------------------------------------------------------
 ramayana_cleaned <- ramayana_text %>%
   filter(text != "") %>%  #drop empty rows
   mutate(verse_line = str_extract(text, r"(R_\d,\d+\.\d+)")) %>% 
@@ -78,13 +55,9 @@ ramayana_cleaned <- ramayana_text %>%
     is.na(verse_line) & is.na(lead(verse_line)) & is.na(lead(verse_line, n = 2)) ~ lead(verse_line, n = 3)
   )) %>% 
   mutate(text_clean = str_replace(text, r"(R_\d,\d+\.\d+)", ""))
-```
 
-The rgveda text is separated into 10 'maṇḍala's, but is otherwise similar to the ramayana text: some of the lines have verse and line indicators. The mandalas I think is implicit in the verse and line indicators, so let's just grab those and put them in a separate column.
 
-If a line doesn't have a verse and line indicator, we'll give it the one from the following line - or the one after that, if that one's empty too.
-
-```{r}
+## --------------------------------------------------------------------------------------------------------------------------------
 rgveda_cleaned <- rgveda_text %>% 
   filter(text != "") %>%   #drop empty rows
   #slice(1:10) %>% 
@@ -97,10 +70,9 @@ rgveda_cleaned <- rgveda_text %>%
   )) %>% 
   mutate(text_clean = str_replace(text, r"(RV_\d+,\d+\.\d+)", ""),
          text_clean = str_replace_all(text_clean, r"(\|)", ""))
-```
 
-# Combine cleaned texts and save out
-```{r}
+
+## --------------------------------------------------------------------------------------------------------------------------------
 texts <- mahabharatha_cleaned %>% 
   mutate(document = "Mahabharatha") %>% 
   bind_rows(ramayana_cleaned %>% mutate(document = "Ramayana")) %>% 
@@ -109,4 +81,4 @@ texts <- mahabharatha_cleaned %>%
 texts %>% 
   write_csv("data_processed/texts_combined_line_by_line.csv")
 
-```
+
